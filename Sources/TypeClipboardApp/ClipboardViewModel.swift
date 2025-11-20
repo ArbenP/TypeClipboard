@@ -65,6 +65,7 @@ final class ClipboardViewModel: ObservableObject {
 
     private let typingEngine = TypingEngine()
     private let accessibilityManager = AccessibilityPermissionManager()
+    private let relauncher = AppRelauncher()
     private var clipboardWatcher: ClipboardWatcher?
     private var lastCapturedChangeCount: Int
     private var isProgrammaticBufferMutation = false
@@ -109,6 +110,20 @@ final class ClipboardViewModel: ObservableObject {
             Task { @MainActor in
                 self?.refreshAccessibilityStatus()
             }
+        }
+    }
+
+    func restartApplicationForAccessibility() {
+        statusMessage = StatusMessage(
+            text: "Restarting TypeClipboard to apply new accessibility permissions…",
+            style: .info
+        )
+        do {
+            try relauncher.restart()
+        } catch let error as AppRelauncherError {
+            statusMessage = StatusMessage(text: error.localizedDescription, style: .error)
+        } catch {
+            statusMessage = StatusMessage(text: error.localizedDescription, style: .error)
         }
     }
 

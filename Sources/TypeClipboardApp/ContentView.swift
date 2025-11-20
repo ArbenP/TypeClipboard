@@ -182,15 +182,15 @@ struct ContentView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Enable Accessibility")
                                 .font(.headline)
-                            Text("macOS requires accessibility permission so TypeClipboard can simulate keystrokes. Select “Open Settings”, enable TypeClipboard, then return here and press Refresh.")
+                            Text("macOS requires accessibility permission so TypeClipboard can simulate keystrokes. Select “Open Settings”, enable TypeClipboard, then restart the app to apply the change.")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                             HStack(spacing: 12) {
                                 Button("Open Settings") {
                                     viewModel.requestAccessibilityAccess()
                                 }
-                                Button("Refresh Status") {
-                                    viewModel.refreshAccessibilityStatus()
+                                Button("Restart App") {
+                                    viewModel.restartApplicationForAccessibility()
                                 }
                             }
                         }
