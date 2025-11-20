@@ -47,7 +47,6 @@ final class ClipboardViewModel: ObservableObject {
     @Published var statusMessage: StatusMessage?
     @Published private(set) var lastUpdatedAt: Date?
     @Published private(set) var isAccessibilityTrusted: Bool = false
-    @Published private(set) var isBufferDirty: Bool = false
 
     let characterDelayRange = 0.0...0.25
     let countdownRange = 0...10
@@ -96,7 +95,6 @@ final class ClipboardViewModel: ObservableObject {
 
     func userEditedBuffer() {
         guard !isProgrammaticBufferMutation else { return }
-        isBufferDirty = true
         lastUpdatedAt = Date()
         recalculateBufferMetrics()
     }
@@ -201,14 +199,6 @@ final class ClipboardViewModel: ObservableObject {
             return
         }
 
-        guard !isBufferDirty else {
-            statusMessage = StatusMessage(
-                text: "Clipboard changed but the buffer has manual edits. Capture manually to overwrite.",
-                style: .warning
-            )
-            return
-        }
-
         applyBuffer(string, origin: .automatic)
         statusMessage = StatusMessage(
             text: "Clipboard captured automatically (\(string.count) characters).",
@@ -220,7 +210,6 @@ final class ClipboardViewModel: ObservableObject {
         isProgrammaticBufferMutation = true
         bufferText = text
         isProgrammaticBufferMutation = false
-        isBufferDirty = false
         lastUpdatedAt = Date()
         recalculateBufferMetrics()
     }
