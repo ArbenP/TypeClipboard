@@ -1,14 +1,15 @@
 import SwiftUI
+import AppKit
 
 @main
 struct TypeClipboardApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var viewModel = ClipboardViewModel()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(viewModel)
-                .frame(minWidth: 520, idealWidth: 560, minHeight: 420, idealHeight: 470)
         }
         .windowToolbarStyle(.unified)
         .commands {
