@@ -11,20 +11,23 @@ struct ContentView: View {
     }()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            header
-            bufferSection
-            controlsSection
-            statusSection
-            accessibilitySection
+        ScrollView(.vertical, showsIndicators: true) {
+            VStack(alignment: .leading, spacing: 20) {
+                header
+                bufferSection
+                controlsSection
+                statusSection
+                accessibilitySection
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color(nsColor: .windowBackgroundColor))
         .background(
             WindowConfigurator(
                 minimumSize: CGSize(width: 640, height: 560),
-                preferredSize: CGSize(width: 760, height: 630)
+                preferredSize: CGSize(width: 760, height: 660)
             )
             .allowsHitTesting(false)
         )
@@ -64,7 +67,7 @@ struct ContentView: View {
                     .padding(6)
                     .background(Color.clear)
                     .focused($bufferFocused)
-                    .frame(minHeight: 200, maxHeight: 260)
+                    .frame(minHeight: 180, maxHeight: 240)
                 if viewModel.bufferText.isEmpty {
                     Text("Captured text will appear here…")
                         .foregroundStyle(.secondary)
