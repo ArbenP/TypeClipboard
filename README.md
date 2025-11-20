@@ -39,7 +39,7 @@ The compiled binary is located at `.build/release/TypeClipboardApp`. You can lau
 
 ## Troubleshooting
 - **Nothing types when I press Type Now** – Ensure Accessibility permission is granted and the target window is active. Some secure fields (e.g., macOS login) block synthetic input.
-- **Buffer keeps changing while I edit** – Disable the *Update buffer when the clipboard changes* toggle; auto-capture only overwrites the buffer when there are no manual edits pending.
+- **Buffer keeps changing while I edit** – Disable the *Update buffer when the clipboard changes* toggle; with it enabled, every clipboard change immediately replaces the buffer.
 - **Characters type too fast/slow** – Adjust the per-character delay slider (0–250 ms).
 
 ## Packaging a Standalone `.app`
