@@ -14,7 +14,10 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "TypeClipboardApp"
+            name: "TypeClipboardApp",
+            resources: [
+                .process("Resources")
+            ]
         )
     ]
 )

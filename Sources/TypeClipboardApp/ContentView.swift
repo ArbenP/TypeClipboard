@@ -21,6 +21,13 @@ struct ContentView: View {
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color(nsColor: .windowBackgroundColor))
+        .background(
+            WindowConfigurator(
+                minimumSize: CGSize(width: 640, height: 560),
+                preferredSize: CGSize(width: 760, height: 630)
+            )
+            .allowsHitTesting(false)
+        )
         .onChange(of: viewModel.bufferText) { _ in
             viewModel.userEditedBuffer()
         }
@@ -57,7 +64,7 @@ struct ContentView: View {
                     .padding(6)
                     .background(Color.clear)
                     .focused($bufferFocused)
-                    .frame(minHeight: 160, maxHeight: 200)
+                    .frame(minHeight: 200, maxHeight: 260)
                 if viewModel.bufferText.isEmpty {
                     Text("Captured text will appear here…")
                         .foregroundStyle(.secondary)
