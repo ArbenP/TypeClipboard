@@ -1,7 +1,8 @@
 # TypeClipboard
 
-TypeClipboard is a SwiftUI macOS utility that replays whatever is in your clipboard as live keyboard input. It is built for remote sessions (VNC, RDP, virtual consoles, kiosks) where paste is blocked but you still need to enter long secrets accurately.
+![TypeClipboard screenshot](./Screenshot.png)
 
+TypeClipboard is a SwiftUI macOS utility that replays whatever is in your clipboard as live keyboard input. It is built for remote sessions (VNC, RDP, virtual consoles, kiosks) where paste is blocked but you still need to enter long secrets accurately.
 
 ## Features
 - Capture clipboard contents into an editable buffer
