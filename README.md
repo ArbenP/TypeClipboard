@@ -14,8 +14,7 @@ TypeClipboard is a SwiftUI macOS utility that replays whatever is in your clipbo
 
 ## Download
 - Get the latest prebuilt `.app` from the [Releases page](https://github.com/ArbenP/TypeClipboard/releases).
-- Move `TypeClipboard.app` to `/Applications` (recommended) or run it from your preferred folder.
-- First launch on macOS may require *Right-click → Open* because the build is ad-hoc signed.
+
 
 ## First Run / Permissions
 TypeClipboard needs macOS Accessibility permission to generate keystrokes:
