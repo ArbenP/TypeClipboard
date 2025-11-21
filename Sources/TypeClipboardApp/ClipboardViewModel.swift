@@ -27,7 +27,7 @@ final class ClipboardViewModel: ObservableObject {
     @Published private(set) var previewDescription: String = "Buffer empty"
     @Published private(set) var characterCount: Int = 0
     @Published private(set) var lineCount: Int = 0
-    @Published var autoCapture: Bool = true {
+    @Published var autoCapture: Bool = false {
         didSet { autoCapture ? startClipboardMonitoring() : stopClipboardMonitoring() }
     }
     @Published var appendReturn: Bool = true
@@ -69,6 +69,8 @@ final class ClipboardViewModel: ObservableObject {
     private var clipboardWatcher: ClipboardWatcher?
     private var lastCapturedChangeCount: Int
     private var isProgrammaticBufferMutation = false
+    private var userHasEditedBuffer = false
+    private var typingTask: Task<Void, Never>?
 
     init() {
         lastCapturedChangeCount = NSPasteboard.general.changeCount
@@ -79,10 +81,6 @@ final class ClipboardViewModel: ObservableObject {
         }
 
         refreshAccessibilityStatus()
-        captureClipboard(silent: true)
-        if autoCapture {
-            startClipboardMonitoring()
-        }
     }
 
     func captureClipboard() {
@@ -96,6 +94,7 @@ final class ClipboardViewModel: ObservableObject {
 
     func userEditedBuffer() {
         guard !isProgrammaticBufferMutation else { return }
+        userHasEditedBuffer = true
         lastUpdatedAt = Date()
         recalculateBufferMetrics()
     }
@@ -154,17 +153,23 @@ final class ClipboardViewModel: ObservableObject {
             statusMessage = StatusMessage(text: "Typing now…", style: .info)
         }
 
-        Task { [weak self] in
+        typingTask = Task { @MainActor [weak self] in
             guard let self else { return }
-
-            if countdown > 0 {
-                for remaining in stride(from: countdown, to: 0, by: -1) {
-                    self.statusMessage = StatusMessage(text: "Typing in \(remaining == 1 ? "1 second" : "\(remaining) seconds")…", style: .info)
-                    try await Task.sleep(nanoseconds: 1_000_000_000)
-                }
+            defer {
+                self.isTyping = false
+                self.typingTask = nil
             }
 
             do {
+                if countdown > 0 {
+                    for remaining in stride(from: countdown, to: 0, by: -1) {
+                        try Task.checkCancellation()
+                        self.statusMessage = StatusMessage(text: "Typing in \(remaining == 1 ? "1 second" : "\(remaining) seconds")…", style: .info)
+                        try await Task.sleep(nanoseconds: 1_000_000_000)
+                    }
+                }
+
+                try Task.checkCancellation()
                 try await self.typingEngine.type(text: text, characterDelay: delay, appendReturn: appendReturn)
                 let appended = appendReturn ? 1 : 0
                 self.statusMessage = StatusMessage(
@@ -178,9 +183,12 @@ final class ClipboardViewModel: ObservableObject {
             } catch {
                 self.statusMessage = StatusMessage(text: error.localizedDescription, style: .error)
             }
-
-            self.isTyping = false
         }
+    }
+
+    func cancelTyping() {
+        guard isTyping else { return }
+        typingTask?.cancel()
     }
 
     private func captureClipboard(silent: Bool) {
@@ -214,6 +222,14 @@ final class ClipboardViewModel: ObservableObject {
             return
         }
 
+        if userHasEditedBuffer {
+            statusMessage = StatusMessage(
+                text: "Ignored clipboard change to avoid overwriting your edits. Capture manually when ready.",
+                style: .warning
+            )
+            return
+        }
+
         applyBuffer(string, origin: .automatic)
         statusMessage = StatusMessage(
             text: "Clipboard captured automatically (\(string.count) characters).",
@@ -225,6 +241,7 @@ final class ClipboardViewModel: ObservableObject {
         isProgrammaticBufferMutation = true
         bufferText = text
         isProgrammaticBufferMutation = false
+        userHasEditedBuffer = false
         lastUpdatedAt = Date()
         recalculateBufferMetrics()
     }

@@ -109,6 +109,17 @@ struct ContentView: View {
 
                 Spacer()
 
+                if viewModel.isTyping {
+                    Button(role: .cancel) {
+                        viewModel.cancelTyping()
+                    } label: {
+                        Label("Cancel Typing", systemImage: "xmark.circle")
+                    }
+                    .controlSize(.large)
+                    .buttonStyle(.bordered)
+                    .keyboardShortcut(.escape, modifiers: [])
+                }
+
                 Button {
                     viewModel.typeBuffer()
                 } label: {
