@@ -4,6 +4,8 @@
 
 TypeClipboard is a SwiftUI macOS utility that replays whatever is in your clipboard as live keyboard input. It is built for remote sessions (VNC, RDP, virtual consoles, kiosks) where paste is blocked but you still need to enter long secrets accurately.
 
+Inspired by [jlaundry/TypeClipboard](https://github.com/jlaundry/TypeClipboard) for Windows.
+
 ## Features
 - Capture clipboard contents into an editable buffer
 - Adjustable countdown so you can focus the target window before typing begins
@@ -69,3 +71,6 @@ swift test
 - **Buffer changed while editing**: Leave auto-capture off, or recapture manually.  
 - **Too fast/slow**: Adjust the per-character delay slider (0–250 ms) and/or countdown.  
 - **Blocked at launch**: Right-click the app → Open to bypass Gatekeeper for ad-hoc builds.
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
