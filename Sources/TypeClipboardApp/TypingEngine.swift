@@ -26,7 +26,7 @@ final class TypingEngine {
 
     func type(text: String, characterDelay: Double, appendReturn: Bool) async throws {
         guard !text.isEmpty else { throw TypingEngineError.emptyBuffer }
-        guard AXIsProcessTrusted() else { throw TypingEngineError.accessibilityDenied }
+        guard EventPostingPermission.isGranted() else { throw TypingEngineError.accessibilityDenied }
 
         let sanitizedDelay = max(characterDelay, 0)
         let eventSource = CGEventSource(stateID: .hidSystemState)
