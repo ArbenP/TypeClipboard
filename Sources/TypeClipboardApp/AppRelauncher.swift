@@ -15,6 +15,7 @@ enum AppRelauncherError: LocalizedError {
     }
 }
 
+@MainActor
 struct AppRelauncher {
     func restart() throws {
         let arguments = Array(CommandLine.arguments.dropFirst())

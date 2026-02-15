@@ -3,6 +3,58 @@ import Foundation
 import SwiftUI
 
 @MainActor
+protocol TypingEngineProtocol {
+    func type(text: String, characterDelay: Double, appendReturn: Bool) async throws
+}
+
+extension TypingEngine: TypingEngineProtocol {}
+
+@MainActor
+protocol AccessibilityPermissionManaging {
+    func isTrusted() -> Bool
+    func promptForAccess()
+}
+
+extension AccessibilityPermissionManager: AccessibilityPermissionManaging {}
+
+@MainActor
+protocol AppRelaunching {
+    func restart() throws
+}
+
+extension AppRelauncher: AppRelaunching {}
+
+@MainActor
+protocol ClipboardWatching: AnyObject {
+    func start()
+    func stop()
+    func sync(changeCount: Int)
+}
+
+extension ClipboardWatcher: ClipboardWatching {}
+
+protocol PasteboardProviding {
+    var changeCount: Int { get }
+    func string(forType dataType: NSPasteboard.PasteboardType) -> String?
+}
+
+struct SystemPasteboard: PasteboardProviding {
+    private let pasteboard: NSPasteboard
+
+    init(_ pasteboard: NSPasteboard = .general) {
+        self.pasteboard = pasteboard
+    }
+
+    var changeCount: Int {
+        pasteboard.changeCount
+    }
+
+    func string(forType dataType: NSPasteboard.PasteboardType) -> String? {
+        pasteboard.string(forType: dataType)
+    }
+}
+
+@MainActor
 final class ClipboardViewModel: ObservableObject {
     enum CaptureOrigin {
         case bootstrapped
@@ -63,18 +115,32 @@ final class ClipboardViewModel: ObservableObject {
         countdownSeconds == 1 ? "1 second" : "\(countdownSeconds) seconds"
     }
 
-    private let typingEngine = TypingEngine()
-    private let accessibilityManager = AccessibilityPermissionManager()
-    private let relauncher = AppRelauncher()
-    private var clipboardWatcher: ClipboardWatcher?
+    private let typingEngine: any TypingEngineProtocol
+    private let accessibilityManager: any AccessibilityPermissionManaging
+    private let relauncher: any AppRelaunching
+    private let pasteboard: any PasteboardProviding
+    private let countdownTickNanoseconds: UInt64
+    private var clipboardWatcher: (any ClipboardWatching)?
     private var lastCapturedChangeCount: Int
     private var isProgrammaticBufferMutation = false
     private var userHasEditedBuffer = false
     private var typingTask: Task<Void, Never>?
 
-    init() {
-        lastCapturedChangeCount = NSPasteboard.general.changeCount
-        clipboardWatcher = ClipboardWatcher { [weak self] string, changeCount in
+    init(
+        typingEngine: any TypingEngineProtocol = TypingEngine(),
+        accessibilityManager: any AccessibilityPermissionManaging = AccessibilityPermissionManager(),
+        relauncher: any AppRelaunching = AppRelauncher(),
+        pasteboard: any PasteboardProviding = SystemPasteboard(),
+        clipboardWatcher: (any ClipboardWatching)? = nil,
+        countdownTickNanoseconds: UInt64 = 1_000_000_000
+    ) {
+        self.typingEngine = typingEngine
+        self.accessibilityManager = accessibilityManager
+        self.relauncher = relauncher
+        self.pasteboard = pasteboard
+        self.countdownTickNanoseconds = countdownTickNanoseconds
+        lastCapturedChangeCount = pasteboard.changeCount
+        self.clipboardWatcher = clipboardWatcher ?? ClipboardWatcher { [weak self] string, changeCount in
             Task { @MainActor in
                 self?.handleClipboardUpdate(string, changeCount: changeCount)
             }
@@ -165,7 +231,7 @@ final class ClipboardViewModel: ObservableObject {
                     for remaining in stride(from: countdown, to: 0, by: -1) {
                         try Task.checkCancellation()
                         self.statusMessage = StatusMessage(text: "Typing in \(remaining == 1 ? "1 second" : "\(remaining) seconds")…", style: .info)
-                        try await Task.sleep(nanoseconds: 1_000_000_000)
+                        try await Task.sleep(nanoseconds: self.countdownTickNanoseconds)
                     }
                 }
 
@@ -192,8 +258,6 @@ final class ClipboardViewModel: ObservableObject {
     }
 
     private func captureClipboard(silent: Bool) {
-        let pasteboard = NSPasteboard.general
-
         guard let string = pasteboard.string(forType: .string), !string.isEmpty else {
             if !silent {
                 statusMessage = StatusMessage(text: "The clipboard does not contain plain text.", style: .warning)
@@ -210,7 +274,7 @@ final class ClipboardViewModel: ObservableObject {
         }
     }
 
-    private func handleClipboardUpdate(_ string: String, changeCount: Int) {
+    func handleClipboardUpdate(_ string: String, changeCount: Int) {
         lastCapturedChangeCount = changeCount
         clipboardWatcher?.sync(changeCount: changeCount)
 

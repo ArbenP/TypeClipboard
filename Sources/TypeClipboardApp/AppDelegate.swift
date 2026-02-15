@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
@@ -83,7 +84,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openHelp() {
-        if let url = URL(string: "https://github.com/arben/TypeClipboard") {
+        if let url = URL(string: "https://github.com/ArbenP/TypeClipboard") {
             NSWorkspace.shared.open(url)
         }
     }

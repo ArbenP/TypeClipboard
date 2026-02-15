@@ -20,6 +20,7 @@ enum TypingEngineError: LocalizedError {
     }
 }
 
+@MainActor
 final class TypingEngine {
     private let keyPressDuration: UInt64 = 15_000_000 // 15 ms between key down and key up
 

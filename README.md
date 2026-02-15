@@ -38,7 +38,7 @@ If permission is missing, typing will be blocked and you’ll see an error banne
 - Accessibility permission enabled for TypeClipboard
 
 ## Build From Source
-Requires Swift 5.9+.
+Requires Swift 6.2+.
 
 CLI build/run:
 ```bash
