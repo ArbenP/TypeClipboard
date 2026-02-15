@@ -1,7 +1,8 @@
 import AppKit
 import Foundation
 
-final class ClipboardWatcher {
+@MainActor
+final class ClipboardWatcher: NSObject {
     typealias Handler = (_ string: String, _ changeCount: Int) -> Void
 
     private let interval: TimeInterval
@@ -18,9 +19,14 @@ final class ClipboardWatcher {
 
     func start() {
         guard timer == nil else { return }
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            self?.checkPasteboard()
-        }
+        let scheduledTimer = Timer(
+            timeInterval: interval,
+            target: self,
+            selector: #selector(handleTimerFired),
+            userInfo: nil,
+            repeats: true
+        )
+        timer = scheduledTimer
         RunLoop.main.add(timer!, forMode: .common)
     }
 
@@ -31,6 +37,10 @@ final class ClipboardWatcher {
 
     func sync(changeCount: Int) {
         lastChangeCount = changeCount
+    }
+
+    @objc private func handleTimerFired() {
+        checkPasteboard()
     }
 
     private func checkPasteboard() {

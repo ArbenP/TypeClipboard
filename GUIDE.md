@@ -4,7 +4,7 @@ These steps produce a local `.app` bundle directly from Xcode without requiring 
 
 ## Prerequisites
 - macOS 13+
-- Xcode 15 or newer (includes the Swift toolchain)
+- Xcode with Swift 6.2 toolchain or newer
 
 ## Steps
 1. Open Xcode and choose **File ▸ Open…**, then select `Package.swift` from this repository. Trust the package if prompted.
