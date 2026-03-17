@@ -20,7 +20,9 @@ struct TypeClipboardApp: App {
             }
             CommandGroup(replacing: .help) {
                 Button("TypeClipboard Help") {
-                    NSWorkspace.shared.open(URL(string: "https://github.com/ArbenP/TypeClipboard")!)
+                    if let url = URL(string: "https://github.com/ArbenP/TypeClipboard") {
+                        NSWorkspace.shared.open(url)
+                    }
                 }
                 .keyboardShortcut("?", modifiers: [.command, .shift])
             }
