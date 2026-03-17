@@ -14,9 +14,15 @@ struct TypeClipboardApp: App {
         .windowToolbarStyle(.unified)
         .commands {
             CommandGroup(replacing: .newItem) {}
-            CommandGroup(replacing: .pasteboard) {
+            CommandGroup(after: .pasteboard) {
                 Button("Capture Clipboard", action: viewModel.captureClipboard)
                     .keyboardShortcut("v", modifiers: [.command, .shift])
+            }
+            CommandGroup(replacing: .help) {
+                Button("TypeClipboard Help") {
+                    NSWorkspace.shared.open(URL(string: "https://github.com/ArbenP/TypeClipboard")!)
+                }
+                .keyboardShortcut("?", modifiers: [.command, .shift])
             }
         }
     }
