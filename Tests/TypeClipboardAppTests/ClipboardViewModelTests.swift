@@ -67,6 +67,7 @@ final class ClipboardViewModelTests: XCTestCase {
         XCTAssertEqual(typingEngine.invocations.count, 1)
         XCTAssertEqual(typingEngine.invocations[0].text, "abc")
         XCTAssertEqual(typingEngine.invocations[0].appendReturn, true)
+        XCTAssertEqual(typingEngine.invocations[0].newlineMode, .notSent)
         XCTAssertEqual(typingEngine.invocations[0].characterDelay, 0.08, accuracy: 0.000_001)
         XCTAssertEqual(viewModel.statusMessage?.text, "Typed 4 characters successfully.")
     }
@@ -130,12 +131,13 @@ private final class TypingEngineMock: TypingEngineProtocol {
         let text: String
         let characterDelay: Double
         let appendReturn: Bool
+        let newlineMode: NewlineMode
     }
 
     private(set) var invocations: [Invocation] = []
 
-    func type(text: String, characterDelay: Double, appendReturn: Bool) async throws {
-        invocations.append(Invocation(text: text, characterDelay: characterDelay, appendReturn: appendReturn))
+    func type(text: String, characterDelay: Double, appendReturn: Bool, newlineMode: NewlineMode) async throws {
+        invocations.append(Invocation(text: text, characterDelay: characterDelay, appendReturn: appendReturn, newlineMode: newlineMode))
     }
 }
 

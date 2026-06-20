@@ -6,7 +6,7 @@ final class TypingEngineTests: XCTestCase {
         let engine = TypingEngine()
 
         do {
-            try await engine.type(text: "", characterDelay: 0, appendReturn: false)
+            try await engine.type(text: "", characterDelay: 0, appendReturn: false, newlineMode: .enter)
             XCTFail("Expected TypingEngineError.emptyBuffer")
         } catch TypingEngineError.emptyBuffer {
             // Expected path

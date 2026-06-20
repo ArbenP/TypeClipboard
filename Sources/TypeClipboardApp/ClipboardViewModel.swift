@@ -4,7 +4,7 @@ import SwiftUI
 
 @MainActor
 protocol TypingEngineProtocol {
-    func type(text: String, characterDelay: Double, appendReturn: Bool) async throws
+    func type(text: String, characterDelay: Double, appendReturn: Bool, newlineMode: NewlineMode) async throws
 }
 
 extension TypingEngine: TypingEngineProtocol {}
@@ -83,6 +83,7 @@ final class ClipboardViewModel: ObservableObject {
         didSet { autoCapture ? startClipboardMonitoring() : stopClipboardMonitoring() }
     }
     @Published var appendReturn: Bool = true
+    @Published var newlineMode: NewlineMode = .notSent
     @Published var countdownSeconds: Int = 2 {
         didSet {
             if countdownSeconds < 0 { countdownSeconds = 0 }
@@ -210,6 +211,7 @@ final class ClipboardViewModel: ObservableObject {
         let text = bufferText
         let delay = perCharacterDelay
         let appendReturn = self.appendReturn
+        let newlineMode = self.newlineMode
         let countdown = countdownSeconds
 
         isTyping = true
@@ -236,7 +238,7 @@ final class ClipboardViewModel: ObservableObject {
                 }
 
                 try Task.checkCancellation()
-                try await self.typingEngine.type(text: text, characterDelay: delay, appendReturn: appendReturn)
+                try await self.typingEngine.type(text: text, characterDelay: delay, appendReturn: appendReturn, newlineMode: newlineMode)
                 let appended = appendReturn ? 1 : 0
                 self.statusMessage = StatusMessage(
                     text: "Typed \(text.count + appended) characters successfully.",

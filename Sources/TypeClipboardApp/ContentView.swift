@@ -109,6 +109,10 @@ struct ContentView: View {
 
                 Spacer()
 
+                newlineModePicker
+
+                Spacer()
+
                 if viewModel.isTyping {
                     Button(role: .cancel) {
                         viewModel.cancelTyping()
@@ -134,6 +138,24 @@ struct ContentView: View {
             Divider()
 
             settingsGrid
+        }
+    }
+
+    private var newlineModePicker: some View {
+        HStack(spacing: 8) {
+            Text("Type newlines as:")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize()
+            Picker("Type newlines as:", selection: $viewModel.newlineMode) {
+                ForEach(NewlineMode.allCases) { mode in
+                    Text(mode.label).tag(mode)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.radioGroup)
+            .horizontalRadioGroupLayout()
+            .fixedSize()
         }
     }
 
