@@ -24,7 +24,7 @@ enum TypingEngineError: LocalizedError {
 final class TypingEngine {
     private let keyPressDuration: UInt64 = 15_000_000 // 15 ms between key down and key up
 
-    func type(text: String, characterDelay: Double, appendReturn: Bool) async throws {
+    func type(text: String, characterDelay: Double, appendReturn: Bool, shiftReturnForNewlines: Bool = false) async throws {
         guard !text.isEmpty else { throw TypingEngineError.emptyBuffer }
         guard EventPostingPermission.isGranted() else { throw TypingEngineError.accessibilityDenied }
 
@@ -32,7 +32,11 @@ final class TypingEngine {
         let eventSource = CGEventSource(stateID: .hidSystemState)
 
         for character in text {
-            try await send(character: character, using: eventSource, interCharacterDelay: sanitizedDelay)
+            if shiftReturnForNewlines && character.isNewline {
+                try await sendReturn(using: eventSource, interCharacterDelay: sanitizedDelay, shift: true)
+            } else {
+                try await send(character: character, using: eventSource, interCharacterDelay: sanitizedDelay)
+            }
         }
 
         if appendReturn {
@@ -57,10 +61,15 @@ final class TypingEngine {
         try await Task.sleep(nanoseconds: nanoseconds(for: delay))
     }
 
-    private func sendReturn(using source: CGEventSource?, interCharacterDelay delay: Double) async throws {
+    private func sendReturn(using source: CGEventSource?, interCharacterDelay delay: Double, shift: Bool = false) async throws {
         guard let down = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Return), keyDown: true),
               let up = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Return), keyDown: false) else {
             throw TypingEngineError.eventCreationFailed
+        }
+
+        if shift {
+            down.flags.insert(.maskShift)
+            up.flags.insert(.maskShift)
         }
 
         down.post(tap: .cghidEventTap)

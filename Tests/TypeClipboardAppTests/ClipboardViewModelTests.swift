@@ -130,12 +130,13 @@ private final class TypingEngineMock: TypingEngineProtocol {
         let text: String
         let characterDelay: Double
         let appendReturn: Bool
+        let shiftReturnForNewlines: Bool
     }
 
     private(set) var invocations: [Invocation] = []
 
-    func type(text: String, characterDelay: Double, appendReturn: Bool) async throws {
-        invocations.append(Invocation(text: text, characterDelay: characterDelay, appendReturn: appendReturn))
+    func type(text: String, characterDelay: Double, appendReturn: Bool, shiftReturnForNewlines: Bool) async throws {
+        invocations.append(Invocation(text: text, characterDelay: characterDelay, appendReturn: appendReturn, shiftReturnForNewlines: shiftReturnForNewlines))
     }
 }
 
