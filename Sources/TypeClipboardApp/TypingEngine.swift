@@ -20,23 +20,44 @@ enum TypingEngineError: LocalizedError {
     }
 }
 
+enum TypingOperation: Equatable {
+    case character(Character)
+    case returnKey(shift: Bool)
+
+    static func operations(for text: String, appendReturn: Bool, shiftReturnForNewlines: Bool) -> [TypingOperation] {
+        var operations: [TypingOperation] = []
+        for character in text {
+            if shiftReturnForNewlines && character.isNewline {
+                operations.append(.returnKey(shift: true))
+            } else {
+                operations.append(.character(character))
+            }
+        }
+        if appendReturn {
+            operations.append(.returnKey(shift: false))
+        }
+        return operations
+    }
+}
+
 @MainActor
 final class TypingEngine {
     private let keyPressDuration: UInt64 = 15_000_000 // 15 ms between key down and key up
 
-    func type(text: String, characterDelay: Double, appendReturn: Bool) async throws {
+    func type(text: String, characterDelay: Double, appendReturn: Bool, shiftReturnForNewlines: Bool = false) async throws {
         guard !text.isEmpty else { throw TypingEngineError.emptyBuffer }
         guard EventPostingPermission.isGranted() else { throw TypingEngineError.accessibilityDenied }
 
         let sanitizedDelay = max(characterDelay, 0)
         let eventSource = CGEventSource(stateID: .hidSystemState)
 
-        for character in text {
-            try await send(character: character, using: eventSource, interCharacterDelay: sanitizedDelay)
-        }
-
-        if appendReturn {
-            try await sendReturn(using: eventSource, interCharacterDelay: sanitizedDelay)
+        for operation in TypingOperation.operations(for: text, appendReturn: appendReturn, shiftReturnForNewlines: shiftReturnForNewlines) {
+            switch operation {
+            case .character(let character):
+                try await send(character: character, using: eventSource, interCharacterDelay: sanitizedDelay)
+            case .returnKey(let shift):
+                try await sendReturn(using: eventSource, interCharacterDelay: sanitizedDelay, shift: shift)
+            }
         }
     }
 
@@ -57,10 +78,15 @@ final class TypingEngine {
         try await Task.sleep(nanoseconds: nanoseconds(for: delay))
     }
 
-    private func sendReturn(using source: CGEventSource?, interCharacterDelay delay: Double) async throws {
+    private func sendReturn(using source: CGEventSource?, interCharacterDelay delay: Double, shift: Bool = false) async throws {
         guard let down = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Return), keyDown: true),
               let up = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Return), keyDown: false) else {
             throw TypingEngineError.eventCreationFailed
+        }
+
+        if shift {
+            down.flags.insert(.maskShift)
+            up.flags.insert(.maskShift)
         }
 
         down.post(tap: .cghidEventTap)

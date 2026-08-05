@@ -167,6 +167,9 @@ struct ContentView: View {
                     Toggle(isOn: $viewModel.appendReturn) {
                         Text("Press Return after typing")
                     }
+                    Toggle(isOn: $viewModel.shiftReturnForNewlines) {
+                        Text("Press Shift + Enter for new lines")
+                    }
                 }
             }
         }
