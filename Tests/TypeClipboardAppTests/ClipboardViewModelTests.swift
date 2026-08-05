@@ -67,8 +67,41 @@ final class ClipboardViewModelTests: XCTestCase {
         XCTAssertEqual(typingEngine.invocations.count, 1)
         XCTAssertEqual(typingEngine.invocations[0].text, "abc")
         XCTAssertEqual(typingEngine.invocations[0].appendReturn, true)
+        XCTAssertEqual(typingEngine.invocations[0].shiftReturnForNewlines, false)
         XCTAssertEqual(typingEngine.invocations[0].characterDelay, 0.08, accuracy: 0.000_001)
         XCTAssertEqual(viewModel.statusMessage?.text, "Typed 4 characters successfully.")
+    }
+
+    func testTypeBufferPassesShiftReturnForNewlinesWhenEnabled() async {
+        let typingEngine = TypingEngineMock()
+        let viewModel = makeViewModel(typingEngine: typingEngine, trusted: true)
+        viewModel.bufferText = "line1\nline2"
+        viewModel.userEditedBuffer()
+        viewModel.countdownSeconds = 0
+        viewModel.shiftReturnForNewlines = true
+
+        viewModel.typeBuffer()
+        let finishedTyping = await waitUntil { !viewModel.isTyping }
+        XCTAssertTrue(finishedTyping)
+
+        XCTAssertEqual(typingEngine.invocations.count, 1)
+        XCTAssertEqual(typingEngine.invocations[0].shiftReturnForNewlines, true)
+    }
+
+    func testTypeBufferPassesShiftReturnForNewlinesFalseWhenDisabled() async {
+        let typingEngine = TypingEngineMock()
+        let viewModel = makeViewModel(typingEngine: typingEngine, trusted: true)
+        viewModel.bufferText = "line1\nline2"
+        viewModel.userEditedBuffer()
+        viewModel.countdownSeconds = 0
+        viewModel.shiftReturnForNewlines = false
+
+        viewModel.typeBuffer()
+        let finishedTyping = await waitUntil { !viewModel.isTyping }
+        XCTAssertTrue(finishedTyping)
+
+        XCTAssertEqual(typingEngine.invocations.count, 1)
+        XCTAssertEqual(typingEngine.invocations[0].shiftReturnForNewlines, false)
     }
 
     func testCancelTypingDuringCountdownStopsBeforeEngineRuns() async {

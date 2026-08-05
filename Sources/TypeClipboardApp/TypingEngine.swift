@@ -20,6 +20,26 @@ enum TypingEngineError: LocalizedError {
     }
 }
 
+enum TypingOperation: Equatable {
+    case character(Character)
+    case returnKey(shift: Bool)
+
+    static func operations(for text: String, appendReturn: Bool, shiftReturnForNewlines: Bool) -> [TypingOperation] {
+        var operations: [TypingOperation] = []
+        for character in text {
+            if shiftReturnForNewlines && character.isNewline {
+                operations.append(.returnKey(shift: true))
+            } else {
+                operations.append(.character(character))
+            }
+        }
+        if appendReturn {
+            operations.append(.returnKey(shift: false))
+        }
+        return operations
+    }
+}
+
 @MainActor
 final class TypingEngine {
     private let keyPressDuration: UInt64 = 15_000_000 // 15 ms between key down and key up
@@ -31,16 +51,13 @@ final class TypingEngine {
         let sanitizedDelay = max(characterDelay, 0)
         let eventSource = CGEventSource(stateID: .hidSystemState)
 
-        for character in text {
-            if shiftReturnForNewlines && character.isNewline {
-                try await sendReturn(using: eventSource, interCharacterDelay: sanitizedDelay, shift: true)
-            } else {
+        for operation in TypingOperation.operations(for: text, appendReturn: appendReturn, shiftReturnForNewlines: shiftReturnForNewlines) {
+            switch operation {
+            case .character(let character):
                 try await send(character: character, using: eventSource, interCharacterDelay: sanitizedDelay)
+            case .returnKey(let shift):
+                try await sendReturn(using: eventSource, interCharacterDelay: sanitizedDelay, shift: shift)
             }
-        }
-
-        if appendReturn {
-            try await sendReturn(using: eventSource, interCharacterDelay: sanitizedDelay)
         }
     }
 
