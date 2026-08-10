@@ -41,6 +41,11 @@ final class TypingEngine {
     }
 
     private func send(character: Character, using source: CGEventSource?, interCharacterDelay delay: Double) async throws {
+        if character.isNewline {
+            try await sendShiftReturn(using: source, interCharacterDelay: delay)
+            return
+        }
+
         var utf16Units = Array(String(character).utf16)
 
         guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true),
@@ -54,6 +59,21 @@ final class TypingEngine {
         keyDown.post(tap: .cghidEventTap)
         try await Task.sleep(nanoseconds: keyPressDuration)
         keyUp.post(tap: .cghidEventTap)
+        try await Task.sleep(nanoseconds: nanoseconds(for: delay))
+    }
+
+    private func sendShiftReturn(using source: CGEventSource?, interCharacterDelay delay: Double) async throws {
+        guard let down = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Return), keyDown: true),
+              let up = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Return), keyDown: false) else {
+            throw TypingEngineError.eventCreationFailed
+        }
+
+        down.flags = .shift
+        up.flags = .shift
+
+        down.post(tap: .cghidEventTap)
+        try await Task.sleep(nanoseconds: keyPressDuration)
+        up.post(tap: .cghidEventTap)
         try await Task.sleep(nanoseconds: nanoseconds(for: delay))
     }
 
