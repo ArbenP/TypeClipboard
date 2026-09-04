@@ -30,9 +30,11 @@ final class TypingEngine {
 
         let sanitizedDelay = max(characterDelay, 0)
         let eventSource = CGEventSource(stateID: .hidSystemState)
+        // Resolved once per run so a layout switch mid-session is picked up on the next Type Now.
+        let layout = KeyboardLayout.current()
 
         for character in text {
-            try await send(character: character, using: eventSource, interCharacterDelay: sanitizedDelay)
+            try await send(character: character, using: eventSource, layout: layout, interCharacterDelay: sanitizedDelay)
         }
 
         if appendReturn {
@@ -40,12 +42,25 @@ final class TypingEngine {
         }
     }
 
-    private func send(character: Character, using source: CGEventSource?, interCharacterDelay delay: Double) async throws {
+    private func send(character: Character, using source: CGEventSource?, layout: KeyboardLayout, interCharacterDelay delay: Double) async throws {
         var utf16Units = Array(String(character).utf16)
 
-        guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true),
-              let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false) else {
+        // Remote desktop clients read the virtual key code and discard the Unicode payload, so the
+        // character has to be posted on the key that actually produces it. Characters the layout
+        // cannot reach (emoji, other scripts) fall back to the payload-only event, which still
+        // works in native apps.
+        let stroke = layout.keyStroke(for: character)
+        let virtualKey = stroke?.keyCode ?? 0
+
+        guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: virtualKey, keyDown: true),
+              let keyUp = CGEvent(keyboardEventSource: source, virtualKey: virtualKey, keyDown: false) else {
             throw TypingEngineError.eventCreationFailed
+        }
+
+        if let stroke {
+            // Set even when empty, so a modifier the user happens to be holding cannot leak in.
+            keyDown.flags = stroke.modifiers
+            keyUp.flags = stroke.modifiers
         }
 
         keyDown.keyboardSetUnicodeString(stringLength: utf16Units.count, unicodeString: &utf16Units)
