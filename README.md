@@ -71,6 +71,8 @@ swift test
 - **Buffer changed while editing**: Leave auto-capture off, or recapture manually.  
 - **Too fast/slow**: Adjust the per-character delay slider (0–250 ms) and/or countdown.  
 - **Blocked at launch**: Right-click the app → Open to bypass Gatekeeper for ad-hoc builds.
+- **Remote session (RDP/VNC) types the wrong characters**: TypeClipboard sends each character on the key that produces it under your active macOS layout. Set the remote host to the same keyboard layout as your Mac, or the remote side will read those keys with its own layout.  
+- **Uppercase arrives lowercase in Microsoft Windows App**: the client drops the modifier state of synthetic keystrokes in scancode mode. Switch the connection to *Connections ▸ Keyboard Mode ▸ Unicode*.  
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
